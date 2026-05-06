@@ -119,6 +119,40 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &142259784
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 142259785}
+  m_Layer: 0
+  m_Name: Level
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &142259785
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142259784}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 166.94485, y: -34.37025, z: 142.13942}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1452620321}
+  - {fileID: 1680172339}
+  - {fileID: 1154801187}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -425,15 +459,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a47dc7b053e8c0b47b7efb4dd4b58b17, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.4944992
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a47dc7b053e8c0b47b7efb4dd4b58b17, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.4575
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a47dc7b053e8c0b47b7efb4dd4b58b17, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.5595245
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a47dc7b053e8c0b47b7efb4dd4b58b17, type: 3}
       propertyPath: m_LocalRotation.w
@@ -706,10 +740,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 150dd5f27858b174c8ba98c42c15a2d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleCarController
-  acceleration: 35
-  maxSpeed: 200
+  acceleration: 50
+  maxSpeed: 400
   turnSpeed: 10
-  grip: 1
+  grip: 0.965
+  extraGravity: 0
+  downforce: 10
   groundCheckDistance: 1
   groundLayer:
     serializedVersion: 2
@@ -885,12 +921,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1154801183}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.71157855, z: 0, w: 0.7026066}
-  m_LocalPosition: {x: 117.5, y: -51, z: 136.3}
+  m_LocalRotation: {x: -0, y: -0.71157855, z: -0, w: 0.7026066}
+  m_LocalPosition: {x: -49.444855, y: -16.62975, z: -5.8394165}
   m_LocalScale: {x: 10, y: 1, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 142259785}
   m_LocalEulerAnglesHint: {x: 0, y: -90.727, z: 0}
 --- !u!1 &1452620317
 GameObject:
@@ -999,11 +1035,11 @@ Transform:
   m_GameObject: {fileID: 1452620317}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7072539, z: -0, w: 0.7069598}
-  m_LocalPosition: {x: 119.9, y: 0, z: -95.7}
+  m_LocalPosition: {x: -47.044853, y: 34.37025, z: -237.83942}
   m_LocalScale: {x: 10, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 142259785}
   m_LocalEulerAnglesHint: {x: 0, y: -90.024, z: 0}
 --- !u!1 &1680172335
 GameObject:
@@ -1112,11 +1148,11 @@ Transform:
   m_GameObject: {fileID: 1680172335}
   serializedVersion: 2
   m_LocalRotation: {x: 0.05601243, y: -0.71073836, z: -0.0630417, w: 0.69838345}
-  m_LocalPosition: {x: 119.9, y: -15.1, z: 15}
+  m_LocalPosition: {x: -47.044853, y: 19.27025, z: -127.13942}
   m_LocalScale: {x: 10, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 142259785}
   m_LocalEulerAnglesHint: {x: -0.652, y: -90.95, z: -9.653}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -1126,7 +1162,5 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 892047304}
-  - {fileID: 1452620321}
-  - {fileID: 1680172339}
-  - {fileID: 1154801187}
   - {fileID: 985764552}
+  - {fileID: 142259785}

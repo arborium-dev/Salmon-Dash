@@ -12,9 +12,13 @@ public class SimpleCarController : MonoBehaviour
     [Range(0f, 1f)]
     public float grip = 0.95f;
 
+    [Header("Gravity & Feel")]
+    public float extraGravity = 40f;       // Makes the car fall faster (fixes floatiness)
+    public float downforce = 20f;          // Pushes the car into the ground when driving fast
+
     [Header("Ground Check")]
-    public float groundCheckDistance = 1f; // How long the downward laser is
-    public LayerMask groundLayer = ~0;     // What counts as ground (~0 means "Everything")
+    public float groundCheckDistance = 1f; 
+    public LayerMask groundLayer = ~0;     
 
     [Header("Input System")]
     [SerializeField] private InputActionReference moveAction;
@@ -30,22 +34,21 @@ public class SimpleCarController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (moveAction != null)
-            moveAction.action.Enable();
+        if (moveAction != null) moveAction.action.Enable();
     }
 
     private void OnDisable()
     {
-        if (moveAction != null)
-            moveAction.action.Disable();
+        if (moveAction != null) moveAction.action.Disable();
     }
 
     void FixedUpdate() 
     {
-        // 1. GROUND CHECK
-        // Shoot a ray straight down from slightly above the car's origin
         Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
         isGrounded = Physics.Raycast(rayStart, Vector3.down, groundCheckDistance, groundLayer);
+
+        // 1. CUSTOM GRAVITY (Fixes the moon-jump floaty feel)
+        rb.AddForce(Vector3.down * extraGravity, ForceMode.Acceleration);
 
         if (moveAction == null) return;
 
@@ -53,21 +56,23 @@ public class SimpleCarController : MonoBehaviour
         float moveInput = input.y;
         float turnInput = input.x;
 
-        // ONLY apply driving forces if the car is touching the ground
         if (isGrounded)
         {
-            // Acceleration (Gas/Brake)
+            // Acceleration
             rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
-
-            // Turning (Steering)
+            // Turning
             rb.AddRelativeTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
 
-            // Arcade Grip (Cancels out sideways sliding)
+            // Arcade Grip
             Vector3 rightVelocity = transform.right * Vector3.Dot(rb.linearVelocity, transform.right);
             rb.linearVelocity -= rightVelocity * grip;
+
+            // 2. DOWNFORCE (The faster you go, the more it pushes you into the road)
+            float speedFactor = rb.linearVelocity.magnitude / maxSpeed;
+            rb.AddForce(Vector3.down * downforce * speedFactor, ForceMode.Acceleration);
         }
 
-        // Limit Maximum Speed (We do this everywhere so you don't break the sound barrier mid-air)
+        // Limit Maximum Speed
         Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         if (flatVelocity.magnitude > maxSpeed)
         {
@@ -76,11 +81,11 @@ public class SimpleCarController : MonoBehaviour
         }
     }
 
-    // This draws a red line in the Unity Editor so you can see your ground check!
-    private void OnDrawGizmos()
+    private void Update()
     {
-        Gizmos.color = isGrounded ? Color.green : Color.red;
+        // View the ground check in the Scene View while playing
         Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
-        Gizmos.DrawLine(rayStart, rayStart + (Vector3.down * groundCheckDistance));
+        Color lineColor = isGrounded ? Color.green : Color.red;
+        Debug.DrawRay(rayStart, Vector3.down * groundCheckDistance, lineColor);
     }
 }
