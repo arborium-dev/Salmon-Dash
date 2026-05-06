@@ -4,19 +4,28 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class SimpleCarController : MonoBehaviour
 {
-    [Header("Movement")]
-    public float moveSpeed = 10f;
-    public float turnSpeed = 100f;
+    [Header("Movement (Physics)")]
+    public float acceleration = 30f;
+    public float maxSpeed = 20f;
+    public float turnSpeed = 5f;
+    
+    [Range(0f, 1f)]
+    public float grip = 0.95f;
+
+    [Header("Ground Check")]
+    public float groundCheckDistance = 1f; // How long the downward laser is
+    public LayerMask groundLayer = ~0;     // What counts as ground (~0 means "Everything")
 
     [Header("Input System")]
     [SerializeField] private InputActionReference moveAction;
 
     private Rigidbody rb;
+    private bool isGrounded;
 
     private void Start()
     {
-        // Grab the Rigidbody attached to the car
         rb = GetComponent<Rigidbody>();
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
     private void OnEnable()
@@ -31,24 +40,47 @@ public class SimpleCarController : MonoBehaviour
             moveAction.action.Disable();
     }
 
-    // Use FixedUpdate for Rigidbody physics
     void FixedUpdate() 
     {
+        // 1. GROUND CHECK
+        // Shoot a ray straight down from slightly above the car's origin
+        Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
+        isGrounded = Physics.Raycast(rayStart, Vector3.down, groundCheckDistance, groundLayer);
+
         if (moveAction == null) return;
 
         Vector2 input = moveAction.action.ReadValue<Vector2>();
+        float moveInput = input.y;
+        float turnInput = input.x;
 
-        float moveInput = input.y;   // W/S or Up/Down
-        float turnInput = input.x;   // A/D or Left/Right
+        // ONLY apply driving forces if the car is touching the ground
+        if (isGrounded)
+        {
+            // Acceleration (Gas/Brake)
+            rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
 
-        // 1. Calculate how much to move
-        Vector3 moveDelta = transform.forward * moveInput * moveSpeed * Time.fixedDeltaTime;
-        // Move the Rigidbody securely, checking for collisions along the way
-        rb.MovePosition(rb.position + moveDelta);
+            // Turning (Steering)
+            rb.AddRelativeTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
 
-        // 2. Calculate how much to rotate
-        Quaternion turnDelta = Quaternion.Euler(0f, turnInput * turnSpeed * Time.fixedDeltaTime, 0f);
-        // Rotate the Rigidbody securely
-        rb.MoveRotation(rb.rotation * turnDelta);
+            // Arcade Grip (Cancels out sideways sliding)
+            Vector3 rightVelocity = transform.right * Vector3.Dot(rb.linearVelocity, transform.right);
+            rb.linearVelocity -= rightVelocity * grip;
+        }
+
+        // Limit Maximum Speed (We do this everywhere so you don't break the sound barrier mid-air)
+        Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (flatVelocity.magnitude > maxSpeed)
+        {
+            Vector3 limitedVelocity = flatVelocity.normalized * maxSpeed;
+            rb.linearVelocity = new Vector3(limitedVelocity.x, rb.linearVelocity.y, limitedVelocity.z);
+        }
+    }
+
+    // This draws a red line in the Unity Editor so you can see your ground check!
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = isGrounded ? Color.green : Color.red;
+        Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
+        Gizmos.DrawLine(rayStart, rayStart + (Vector3.down * groundCheckDistance));
     }
 }
