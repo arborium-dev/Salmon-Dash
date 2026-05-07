@@ -11,7 +11,19 @@ public class Goal : MonoBehaviour
             if (progress.touchedCheckpoints.Count >= progress.totalCheckpointsRequired)
             {
                 Debug.Log("GOAL REACHED! You got all the checkpoints!");
-                // Put code for winning/next level here
+                // Inside your Goal.cs where the player wins:
+                if (progress.touchedCheckpoints.Count >= progress.totalCheckpointsRequired)
+                {
+                    Debug.Log("GOAL REACHED! You got all the checkpoints!");
+    
+                    // Find the UIManager and stop the clock
+                    UIManager uiManager = FindFirstObjectByType<UIManager>();
+                    if (uiManager != null)
+                    {
+                        uiManager.StopTimer();
+                    }
+                }
+
             }
             else
             {
