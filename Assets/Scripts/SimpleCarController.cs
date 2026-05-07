@@ -4,20 +4,24 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class SimpleCarController : MonoBehaviour
 {
-    [Header("Movement (Physics)")]
-    public float acceleration = 30f;
+    [Header("Movement (Ground)")]
+    public float acceleration = 60f;        
     public float maxSpeed = 20f;
-    public float turnSpeed = 5f;
-    
-    [Range(0f, 1f)]
-    public float grip = 0.95f;
+    public float turnSpeed = 120f;          
+    [Range(0f, 1f)] public float grip = 0.95f;
+
+    [Header("Air Control")]
+    public float airPitchSpeed = 5f;     
+    public float airYawSpeed = 4f;       
+    public float autoAlignSpeed = 2f;    
 
     [Header("Gravity & Feel")]
-    public float extraGravity = 40f;       // Makes the car fall faster (fixes floatiness)
-    public float downforce = 20f;          // Pushes the car into the ground when driving fast
+    public float baseGravity = 40f;        
+    public float fallMultiplier = 1.5f;    
+    public float downforce = 20f;          
 
     [Header("Ground Check")]
-    public float groundCheckDistance = 1f; 
+    public float groundCheckDistance = 1.5f; 
     public LayerMask groundLayer = ~0;     
 
     [Header("Input System")]
@@ -47,32 +51,64 @@ public class SimpleCarController : MonoBehaviour
         Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
         isGrounded = Physics.Raycast(rayStart, Vector3.down, groundCheckDistance, groundLayer);
 
-        // 1. CUSTOM GRAVITY (Fixes the moon-jump floaty feel)
-        rb.AddForce(Vector3.down * extraGravity, ForceMode.Acceleration);
+        // SMART GRAVITY
+        float currentGravity = baseGravity;
+        if (rb.linearVelocity.y < 0 && !isGrounded)
+        {
+            currentGravity *= fallMultiplier; 
+        }
+        rb.AddForce(Vector3.down * currentGravity, ForceMode.Acceleration);
 
         if (moveAction == null) return;
-
         Vector2 input = moveAction.action.ReadValue<Vector2>();
-        float moveInput = input.y;
+        float pitchInput = input.y;
         float turnInput = input.x;
 
         if (isGrounded)
         {
-            // Acceleration
-            rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
-            // Turning
-            rb.AddRelativeTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
+            // --- GROUND MOVEMENT ---
+            
+            // 0. KILL LEFTOVER SPIN (Instantly stops the car from continuing to turn after you let go!)
+            Vector3 localSpin = transform.InverseTransformDirection(rb.angularVelocity);
+            localSpin.y = 0f; // Erase horizontal spinning
+            rb.angularVelocity = transform.TransformDirection(localSpin);
 
-            // Arcade Grip
+            // 1. Acceleration
+            rb.AddForce(transform.forward * pitchInput * acceleration, ForceMode.Acceleration);
+            
+            // 2. SNAPPY ARCADE TURNING
+            float currentSpeed = rb.linearVelocity.magnitude;
+            if (currentSpeed > 0.5f) 
+            {
+                // Check if we are driving forward or in reverse
+                float direction = Mathf.Sign(Vector3.Dot(rb.linearVelocity, transform.forward));
+                
+                // Directly rotate the car perfectly
+                float turnAmount = turnInput * turnSpeed * direction * Time.fixedDeltaTime;
+                Quaternion turnOffset = Quaternion.Euler(0, turnAmount, 0);
+                rb.MoveRotation(rb.rotation * turnOffset);
+            }
+
+            // 3. Arcade Grip
             Vector3 rightVelocity = transform.right * Vector3.Dot(rb.linearVelocity, transform.right);
             rb.linearVelocity -= rightVelocity * grip;
 
-            // 2. DOWNFORCE (The faster you go, the more it pushes you into the road)
+            // 4. Downforce
             float speedFactor = rb.linearVelocity.magnitude / maxSpeed;
             rb.AddForce(Vector3.down * downforce * speedFactor, ForceMode.Acceleration);
         }
+        else
+        {
+            // --- AIR MOVEMENT ---
+            rb.AddRelativeTorque(Vector3.up * turnInput * airYawSpeed, ForceMode.Acceleration);    
+            rb.AddRelativeTorque(Vector3.right * pitchInput * airPitchSpeed, ForceMode.Acceleration); 
 
-        // Limit Maximum Speed
+            // Auto-Uprighting
+            Vector3 alignForce = Vector3.Cross(transform.up, Vector3.up);
+            rb.AddTorque(alignForce * autoAlignSpeed, ForceMode.Acceleration);
+        }
+
+        // --- SPEED LIMIT ---
         Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         if (flatVelocity.magnitude > maxSpeed)
         {
@@ -83,7 +119,6 @@ public class SimpleCarController : MonoBehaviour
 
     private void Update()
     {
-        // View the ground check in the Scene View while playing
         Vector3 rayStart = transform.position + (Vector3.up * 0.1f);
         Color lineColor = isGrounded ? Color.green : Color.red;
         Debug.DrawRay(rayStart, Vector3.down * groundCheckDistance, lineColor);
