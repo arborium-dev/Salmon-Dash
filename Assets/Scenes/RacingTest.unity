@@ -1107,7 +1107,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 31f790a156b3de140931ece595f42edb, type: 3}
+  m_Resource: {fileID: 8300000, guid: defbb633d573c5b479a8e855cf411181, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -1326,11 +1326,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimpleCarController
   acceleration: 50
   maxSpeed: 400
-  turnSpeed: 10
+  turnSpeed: 50
   grip: 0.965
-  extraGravity: 0
+  airPitchSpeed: 5
+  airYawSpeed: 4
+  autoAlignSpeed: 2
+  baseGravity: 40
+  fallMultiplier: 1.5
   downforce: 10
-  groundCheckDistance: 1
+  groundCheckDistance: 2
   groundLayer:
     serializedVersion: 2
     m_Bits: 4294967295
